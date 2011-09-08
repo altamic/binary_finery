@@ -41,5 +41,35 @@ module BinaryFinery
     def random_integer(bits, type=:uint)
       (type.equal? :int) ? -1*rand(2**(bits-1)) : rand(2**bits)
     end
+
+    def pack_integer(integer, opt={:bytes => 4, :type => :uint, :endian => nil})
+      bytes, type, endian = opt[:bytes], opt[:type], opt[:endian]
+      endian = :big if endian == :network
+      endian = :native if endian == nil
+
+      pack_mapping = {
+          1 => { :uint => { :native => 'C' },
+                 :int  => { :native => 'c' } },
+          2 => { :uint => { :native => 'S', :little => 'v', :big => 'n' },
+                 :int  => { :native => 's', :little => 'v', :big => 'n' } },
+          4 => { :uint => { :native => 'L', :little => 'V', :big => 'N' },
+                 :int  => { :native => 'l', :little => 'V', :big => 'N' } },
+          8 => { :uint => { :native => 'Q' },
+                 :int  => { :native => 'q' } } }
+
+      if bytes == 8 && (endian == :little || endian == :big)
+        bytes  = 4
+        format = pack_mapping[bytes][type][endian]
+        msb, lsb = (integer & 0xFFFFFFFF), (integer >> 16 & 0xFFFFFFFF)
+        array = [msb, lsb]
+        array.reverse! if [1,"\x01"].include?([1].pack('i')[0]) # little endian
+        array.pack(format*2)
+      else
+        format = pack_mapping[bytes][type][endian]
+        [integer].pack(format)
+      end
+
+    end
+
   end
 end

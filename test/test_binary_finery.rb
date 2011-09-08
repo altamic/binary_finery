@@ -69,10 +69,11 @@ class TestBinaryFinery < BinaryFinery::TestCase
   end
 
   def test_read_correctly_4_bytes
-    v2 = "\324{\000\000"
+    v2 = [0x32, 0x24, 0x00, 0x00]
     v2.reverse! if host_endianness.equal? :little
-    buf = StringIO.new(v2).extend(BinaryFinery)
-    value = 0
+    packed = v2.pack("C" * v2.size)
+    buf = StringIO.new(packed).extend(BinaryFinery)
+
     buf.size.times do |i|
       assert_equal v2[i], buf.read_uint8
     end
@@ -93,25 +94,25 @@ class TestBinaryFinery < BinaryFinery::TestCase
     assert_equal 2, buf.size_of('read_int16_little')
   end
 
-  def test_write_uint64_native
-    bytes = [0xB7, 0x0A, 0x46, 0x25, 0xF1, 0xA2, 0x24, 0xCF]
-    bytes.reverse! if BinaryFinery::NATIVE_BYTE_ORDER.equal? :little
-    n = bytes.pack("C"*bytes.size)
+  # def test_write_uint64_native
+    # bytes = [0xB7, 0x0A, 0x46, 0x25, 0xF1, 0xA2, 0x24, 0xCF]
+    # bytes.reverse! if BinaryFinery::NATIVE_BYTE_ORDER.equal? :little
+    # n = bytes.pack("C"*bytes.size)
 
-    buf = StringIO.of_size(8).extend(BinaryFinery)
+    # buf = StringIO.of_size(8).extend(BinaryFinery)
 
-    buf.rewind
-    buf.write_uint64(n)
-    buf.rewind
+    # buf.rewind
+    # buf.write_uint64(n)
+    # buf.rewind
 
-    bytes.each_with_index do |byte, i|
-      buf.pos = i
-      assert_equal byte, buf.read_uint8
-    end
-    buf.rewind
-    expected = bytes.pack("C"*bytes.size)
-    assert_equal n, buf.read_uint64
-  end
+    # bytes.each_with_index do |byte, i|
+      # buf.pos = i
+      # assert_equal byte, buf.read_uint8
+    # end
+    # buf.rewind
+    # expected = bytes.pack("C"*bytes.size)
+    # assert_equal n, buf.read_uint64
+  # end
 
   # def test_write_uint64_little
   #  # write_uint64_little(1)                 # services
@@ -165,7 +166,7 @@ class TestBinaryFinery < BinaryFinery::TestCase
 end
 
 # test read
-bytes_ary = [] # [1,2,4,8]
+bytes_ary = []#[1,2,4,8]
 
 bytes_ary.each do |bytes|
   [:int, :uint].each do |type|
@@ -180,7 +181,7 @@ bytes_ary.each do |bytes|
         define_method "test_#{read_method}" do
           number = random_integer(bits, type)
           packed_number = pack_integer(number, packing)
-          buf = StringIO.new(packed_number)
+          buf = StringIO.new(packed_number).extend(BinaryFinery)
           assert number, buf.send(read_method)
         end
 
@@ -188,14 +189,16 @@ bytes_ary.each do |bytes|
         write_method = "write_#{type}#{bits}_#{mapped_endian}"
         define_method "test_#{write_method}" do
           number = random_integer(bits, type)
-          buf = StringIO.of_size(bytes) { send(write_method, number) }
+          buf = StringIO.extend(BinaryFinery).of_size(bytes) {
+            send(write_method, number) 
+          }
           assert number, buf.send(read_method)
         end
 
         #size
         define_method "test_#{type}#{bits}_length_is_#{bytes}_bytes" do
-          assert bytes, StringIO.new('').size_of(read_method)
-          assert bytes, StringIO.new('').size_of(write_method)
+          assert bytes, StringIO.extend(BinaryFinery).new('').size_of(read_method)
+          assert bytes, StringIO.extend(BinaryFinery).new('').size_of(write_method)
         end
       end
     end
@@ -210,16 +213,18 @@ bytes_ary.each do |bytes|
         define_method "test_#{read_method}" do
           number = random_integer(bits, type)
           packed = pack_integer(number, packing)
-          buf = StringIO.new(packed)
+          buf = StringIO.new(packed).extend(BinaryFinery)
           assert number, buf.send(read_method)
         end
 
         write_method = "write_#{type}#{bits}"
         define_method "test_#{write_method}" do
           number = random_integer(bits, type)
-          buf = StringIO.of_size(bytes) {
-            send(write_method, number)
-          }
+          buf = StringIO.of_size(bytes).extend(BinaryFinery)
+          buf.rewind
+          buf.send(write_method, number)
+          buf.rewind
+          
           assert number, buf.send(read_method)
         end
       end
