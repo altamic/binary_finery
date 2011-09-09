@@ -217,8 +217,8 @@ bytes_ary.each do |bytes|
 
         #size
         define_method "test_#{type}#{bits}_length_is_#{bytes}_bytes" do
-          assert bytes, StringIO.extend(BinaryFinery).new('').size_of(read_method)
-          assert bytes, StringIO.extend(BinaryFinery).new('').size_of(write_method)
+          assert bytes, StringIO.new('').extend(BinaryFinery).size_of(read_method)
+          assert bytes, StringIO.new('').extend(BinaryFinery).size_of(write_method)
         end
       end
     end
@@ -234,6 +234,7 @@ bytes_ary.each do |bytes|
           number = random_integer(bits, type)
           packed = pack_integer(number, packing)
           buf = StringIO.new(packed).extend(BinaryFinery)
+
           assert number, buf.send(read_method)
         end
 
