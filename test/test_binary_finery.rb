@@ -94,79 +94,97 @@ class TestBinaryFinery < BinaryFinery::TestCase
     assert_equal 2, buf.size_of('read_int16_little')
   end
 
-  # def test_write_uint64_native
-    # bytes = [0xB7, 0x0A, 0x46, 0x25, 0xF1, 0xA2, 0x24, 0xCF]
-    # bytes.reverse! if BinaryFinery::NATIVE_BYTE_ORDER.equal? :little
-    # n = bytes.pack("C"*bytes.size)
+  def test_write_uint64_native
+    n = 0xB70A4625F1A224CF # Big endian
+    bytes = [0xB7, 0x0A, 0x46, 0x25, 0xF1, 0xA2, 0x24, 0xCF]
+    bytes.reverse! if BinaryFinery::NATIVE_BYTE_ORDER.equal? :little
+    
+    buf = StringIO.of_size(8).extend(BinaryFinery)
 
-    # buf = StringIO.of_size(8).extend(BinaryFinery)
+    buf.rewind
+    buf.write_uint64(n)
+    buf.rewind
 
-    # buf.rewind
-    # buf.write_uint64(n)
-    # buf.rewind
+    bytes.each_with_index do |byte, i|
+      buf.pos = i
+      assert_equal byte, buf.read_uint8
+    end
+    buf.rewind
+    expected = bytes.pack("C"*bytes.size)
+    assert_equal n, buf.read_uint64
+  end
 
-    # bytes.each_with_index do |byte, i|
-      # buf.pos = i
-      # assert_equal byte, buf.read_uint8
-    # end
-    # buf.rewind
-    # expected = bytes.pack("C"*bytes.size)
-    # assert_equal n, buf.read_uint64
-  # end
+  def test_write_uint64_little
+  #    write_uint64_little(1)                 # services
+    n = 1
+    buf = StringIO.of_size(8).extend(BinaryFinery)
+    buf.write_uint64_little(n)
+    buf.rewind
+  
+    assert_equal n, buf.read_uint64_little
+  end
 
-  # def test_write_uint64_little
-  #  # write_uint64_little(1)                 # services
-    # n = 1
-    # buf = StringIO.of_size(8) { write_uint64_little(n) }
-    # assert_equal n, buf.read_uint64_little
-  # end
+  def test_write_uint128_little
+   # write_uint128_network(0xFFFF00000000)  # ip_address
+    n = 0xFFFF00000000
+    buf = StringIO.of_size(16).extend(BinaryFinery)
+    buf.write_uint128_little(n)
+    buf.rewind
 
-  # def test_write_uint128_little
-  #  # write_uint128_network(0xFFFF00000000)  # ip_address
-    # n = 0xFFFF00000000
-    # buf = StringIO.of_size(16) { write_uint128_little(n) }
-    # assert_equal n, buf.read_uint128_little
-  # end
+    assert_equal n, buf.read_uint128_little
+  end
 
-  # def test_write_uint128_big
-    # n = 0xFFFF00000000
-    # buf = StringIO.of_size(16) { write_uint128_big(n) }
-    # assert_equal n, buf.read_uint128_big
-  # end
+  def test_write_uint128_big
+    n = 0xFFFF00000000
+    buf = StringIO.of_size(16).extend(BinaryFinery)
+    buf.write_uint128_big(n)
+    buf.rewind
 
-  # def test_read_uint128_little
-    # n = rand(2**128)
-    # assert_equal 16, n.size
-    # buf = StringIO.of_size(16) { write_uint128_little(n) }
-    # assert_equal n, buf.read_uint128_little
-  # end
+    assert_equal n, buf.read_uint128_big
+  end
 
-  # def test_read_uint256_little
-    # n = rand(2**256)
-    # assert_equal 32, n.size
-    # buf = StringIO.of_size(32) { write_uint256_little(n) }
-    # assert_equal n, buf.read_uint256_little
-  # end
+  def test_read_uint128_little
+    n = rand(2**128)
+    assert_equal 16, n.size
+    buf = StringIO.of_size(16).extend(BinaryFinery)
+    buf.write_uint128_little(n)
+    buf.rewind
 
-  # def test_read_int128_little
-    # skip
-    # n = -rand(2**127)
-    # assert_equal 16, n.size
-    # buf = StringIO.of_size(16) { write_int128_little(n) }
-    # assert_equal n, buf.read_int128_little
-  # end
+    assert_equal n, buf.read_uint128_little
+  end
 
-  # def test_read_int256_little
-    # skip
-    # n = -rand(2**255)
-    # assert_equal 32, n.size
-    # buf = StringIO.of_size(32) { write_int256_little(n) }
-    # assert_equal n, buf.read_int256_little
-  # end
+  def test_read_uint256_little
+    n = rand(2**256)
+    assert_equal 32, n.size
+    buf = StringIO.of_size(32).extend(BinaryFinery)
+    buf.write_uint256_little(n)
+    buf.rewind
+
+    assert_equal n, buf.read_uint256_little
+  end
+
+  def test_read_int128_little
+    skip
+    n = -rand(2**127)
+    assert_equal 16, n.size
+    buf = StringIO.of_size(16).extend(BinaryFinery)
+    buf.write_int128_little(n)
+    buf.rewind
+
+    assert_equal n, buf.read_int128_little
+  end
+
+  def test_read_int256_little
+    skip
+    n = -rand(2**255)
+    assert_equal 32, n.size
+    buf = StringIO.of_size(32) { write_int256_little(n) }
+    assert_equal n, buf.read_int256_little
+  end
 end
 
 # test read
-bytes_ary = []#[1,2,4,8]
+bytes_ary = [1,2,4,8]
 
 bytes_ary.each do |bytes|
   [:int, :uint].each do |type|
@@ -182,6 +200,7 @@ bytes_ary.each do |bytes|
           number = random_integer(bits, type)
           packed_number = pack_integer(number, packing)
           buf = StringIO.new(packed_number).extend(BinaryFinery)
+
           assert number, buf.send(read_method)
         end
 
@@ -189,9 +208,10 @@ bytes_ary.each do |bytes|
         write_method = "write_#{type}#{bits}_#{mapped_endian}"
         define_method "test_#{write_method}" do
           number = random_integer(bits, type)
-          buf = StringIO.extend(BinaryFinery).of_size(bytes) {
-            send(write_method, number) 
-          }
+          buf = StringIO.of_size(bytes).extend(BinaryFinery)
+          buf.send(write_method, number)
+          buf.rewind
+          
           assert number, buf.send(read_method)
         end
 
