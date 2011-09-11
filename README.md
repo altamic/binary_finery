@@ -72,5 +72,5 @@ To get all of the dependencies, install the gem first.
 Copyright
 =========
 
-© Copyright 2011 Michelangelo Altamore. See LICENCE for details.
+© Copyright 2011 Michelangelo Altamore. See LICENSE for details.
 
