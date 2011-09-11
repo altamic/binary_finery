@@ -164,9 +164,7 @@ class TestBinaryFinery < BinaryFinery::TestCase
   end
 
   def test_read_int128_little
-    skip
-    n = -rand(2**127)
-    assert_equal 16, n.size
+    n = -rand(2**64)
     buf = StringIO.of_size(16).extend(BinaryFinery)
     buf.write_int128_little(n)
     buf.rewind
@@ -176,9 +174,11 @@ class TestBinaryFinery < BinaryFinery::TestCase
 
   def test_read_int256_little
     skip
-    n = -rand(2**255)
-    assert_equal 32, n.size
-    buf = StringIO.of_size(32) { write_int256_little(n) }
+    n = -rand(2**128)
+    buf = StringIO.of_size(32).extend(BinaryFinery)
+    buf.write_int256_little(n)
+    buf.rewind
+
     assert_equal n, buf.read_int256_little
   end
 end

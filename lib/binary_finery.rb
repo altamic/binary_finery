@@ -33,7 +33,7 @@
 #
 module BinaryFinery
   OP_RE     = /(read|write)_/
-  INT_RE    = /(uint|int)(8|16|32|64|128|256)_?(native|little|big|network)?/
+  INT_RE    = /(uint|int)(8|16|32|64)_?(native|little|big|network)?/
   STR_RE    = /(null_padded|c_)?((binary_|fixed_)?string)(_of_)[0-9]+(bytes)/
   OP_INT_RE = Regexp::compile(OP_RE.source + INT_RE.source)
   OP_STR_RE = Regexp::compile(OP_RE.source + STR_RE.source)
@@ -137,6 +137,11 @@ module BinaryFinery
     concat(msb, lsb, 64)
   end
 
+  def read_int128_little
+    val = read_uint128_little
+    val > (2**128 - 1) ? val : -val
+  end
+
   def read_uint128_big
     msb = read_uint64_big
     lsb = read_uint64_big
@@ -153,6 +158,11 @@ module BinaryFinery
     lsb, msb = split_msb_lsb(n, 64)
     write_uint64_little(lsb)
     write_uint64_little(msb)
+  end
+
+  def write_int128_little(n)
+    n = 2**128 - n
+    write_uint128_little(n)
   end
 
   def write_uint128_big(n)
