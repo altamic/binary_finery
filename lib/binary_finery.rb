@@ -102,6 +102,11 @@ module BinaryFinery
     concat(msb, lsb, 128)
   end
 
+  def read_int256_little
+    val = read_uint256_little
+    val > (2**256 - 1) ? val : -val
+  end
+
   def read_uint256_big
     msb = read_uint64_big
     lsb = read_uint64_big
@@ -119,6 +124,14 @@ module BinaryFinery
     write_uint128_little(msb)
     write_uint128_little(lsb)
   end
+
+  def write_int256_little(n)
+    n = 2**256 - n
+    write_uint256_little(n)
+  end
+
+
+
 
   def write_uint256_big(n)
     lsb, msb = split_msb_lsb(n, 128)
