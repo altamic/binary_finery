@@ -198,6 +198,37 @@ class TestBinaryFinery < BinaryFinery::TestCase
 
     assert_equal n, buf.read_int256_little
   end
+
+  def test_write_null_padded_string
+    str = "ciao\000\000\000\000"
+    buf = StringIO.of_size(32).extend(BinaryFinery)
+
+    buf.write_string("ciao", :padding => "\000", :size => str.size)
+    buf.rewind
+
+    assert_equal str, buf.readn(str.size)
+  end
+
+  def test_write_c_string
+    str = "ciao\000"
+    buf = StringIO.of_size(32).extend(BinaryFinery)
+
+    buf.write_c_string("ciao")
+    buf.rewind
+
+    assert_equal str, buf.read_c_string
+  end
+
+  def test_read_null_padded_string
+    str = "ciao\000\000\000\000"
+    buf = StringIO.of_size(32).extend(BinaryFinery)
+
+    buf.write_string("ciao", :padding => "\000", :size => str.size)
+    buf.rewind
+
+    assert_equal str, buf.read_null_padded_string(8)
+  end
+
 end
 
 # test read
@@ -269,4 +300,4 @@ bytes_ary.each do |bytes|
     end
   end
 end
-
+    

@@ -1,15 +1,15 @@
 ##
-# BinaryFinery mixin handles (de)serialization of:
+# BinaryFinery mixin is meant to be used as a
+# fluent interface to any IO entity. This module
+# assumes that read(n) and write(str) methods
+# are available where this module is mixed in.
+# It handles (de)serialization of:
 #
 #   - Integer numbers ✓
 #   - Null terminated strings ✓
 #   - Fixed size strings ✓
 #
-# It is meant to be used as a fluent interface to
-# any IO entity, therefore assumes that read(n)
-# and write(str) methods are available where this
-# module is mixed in.
-#
+
 # In order to be plaftorm agnostic, Binary inspects
 # at load time machine's capabilities and adjust its
 # own operations accordingly.
@@ -130,9 +130,6 @@ module BinaryFinery
     write_uint256_little(n)
   end
 
-
-
-
   def write_uint256_big(n)
     lsb, msb = split_msb_lsb(n, 128)
     write_uint128_big(msb)
@@ -245,25 +242,16 @@ module BinaryFinery
     str
   end
 
-  # TODO: rewrite this method w/o messing with buffer instance vars:
-  # call buffer API instead and declare used methods as a dependence
   def read_null_padded_string(size)
-    str = @content[@position, size]
-    @position += size
-    str.split(/\000/).first or str
+    str = readn(size)
+    str.split(/NUL/).first or str
   end
 
-  # TODO: idem as above
   def read_c_string
-    nul_pos = @content.index(NUL, @position)
-    raise "no C string found." unless nul_pos
-    sz = nul_pos - @position
-    str = @content[@position, sz]
-    @position += sz + 1
-    return str
+    readline(sep_string = NUL)
   end
 
-  def read_string(opt={:size => nil, :padding => 0.chr})
+  def read_string(opt={:size => nil, :padding => NUL})
     if opt[:size]
       read_fixed_size_string(opt[:size], opt[:padding])
     else
@@ -286,18 +274,19 @@ module BinaryFinery
     write(NUL)
   end
 
-  def write_string(content, opt = {:padding  => nil, :size => nil})
-    if (size = opt[:size]) && (opt[:size].kind_of? Integer)
-      output_string = content[0..size]
-      # output_string = output_string.ljust(size, opt[:padding]) if opt[:padding]
-      write(output_string)
-    else
-      write_c_string(content)
-    end
+  def write_string(content, opt = {:padding  => nil, :size => content.size})
+    return if not (opt[:size].kind_of? Integer)
+    output_string = content[0..opt[:size]]
+    output_string = output_string.ljust(opt[:size], opt[:padding]) if opt[:padding]
+    write(output_string)
   end
 
   def write_fixed_size_string(content="")
     write_string(content, :size => content.size)
+  end
+
+  def write_null_padded_string(str, opt = {:size  => str.size})
+    write_string(str, padding => "\000", :size => str.size)
   end
 
   def method_missing(method_name, *args, &block)

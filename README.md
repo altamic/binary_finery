@@ -32,7 +32,6 @@ is mixed in, provides the following methods:
 	- write or write_nonblock
 
 
-
 It will run under Ruby version 1.8.7 or newer.
 
 
@@ -44,7 +43,6 @@ Examples
 	  version = f.read_uint16_big
 		length  = f.read_uint32_little
 	end
-
 
 
 Install
