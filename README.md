@@ -1,4 +1,4 @@
-Binary Finary
+Binary Finery
 =============
 
 Mixes in a _fluent interface_ to any IO entity for reading and
@@ -12,7 +12,7 @@ writing binary data. It handles (de)serialization of:
 Requirements
 ------------
 
-Binary Finary assumes that the stream where
+Binary Finery assumes that the stream where
 is mixed in, provides the following methods:
 
 	- read or read_nonblock
@@ -26,8 +26,8 @@ Examples
 --------
 
 	File.open(my_file.bin) do |f|
-		f.extend(BinaryFinary)
-	  version = f.read_uint16_big
+		f.extend(BinaryFinery)
+		version = f.read_uint16_big
 		length  = f.read_uint32_little
 	end
 
@@ -35,7 +35,7 @@ Examples
 Install
 -------
 
-    $ gem install binary_finary
+    $ gem install binary_finery
 
 
 Contributing
