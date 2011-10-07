@@ -1,8 +1,9 @@
 ##
 # BinaryFinery mixin is meant to be used as a
-# fluent interface to any IO entity. This module
-# assumes that read(n) and write(str) methods
-# are available where this module is mixed in.
+# fluent interface to any IO entity for reading
+# or writing binary data.
+# This module assumes that read(n) and write(str)
+# methods are available where this module is mixed in.
 # It handles (de)serialization of:
 #
 #   - Integer numbers ✓

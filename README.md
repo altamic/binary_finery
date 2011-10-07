@@ -1,21 +1,8 @@
 Binary Finary
 =============
 
-Mixes in a _fluent interface_ to any IO entity.
-Performs operations accepted by the following grammar:
-
-		OP_INT ::= operation '_' integer_type bits ('_' endianness)?
-		operation     ::= 'read' | 'write'
-		integer_type  ::= 'uint' | 'int'
-		bits          ::= '8' | '16' | '32' | '64' | '128' | '256'
-		endianness    ::= 'native' | 'little' | 'big' | 'network'
-
-		OP_STR ::= operation '_' (padding '_')? flavor '_of_' size '_' 'bytes'
-		padding ::= 'null_padded' | 'c'
-		flavor  ::= 'string' | 'fixed_string' | 'binary_string'
-		size    ::= [0-9]+
-
-Handles (de)serialization of:
+Mixes in a _fluent interface_ to any IO entity for reading and
+writing binary data. It handles (de)serialization of:
 
   - Integer numbers
   - Null terminated strings
